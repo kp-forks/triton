@@ -173,7 +173,8 @@ void LayoutRematerialization::cleanup() {
 bool isLayoutAnchor(Operation *op) {
   if (isa<LoadOp, StoreOp>(op))
     return isExpensiveLoadOrStore(op);
-  if (isa<DotOp, nvidia_gpu::WarpGroupDotOp, AtomicRMWOp, AtomicCASOp>(op))
+  if (isa<DotOp, nvidia_gpu::WarpGroupDotOp, AtomicRMWOp, AtomicCASOp,
+          triton::nvidia_gpu::TMEMLoadOp>(op))
     return true;
   if (auto gatherOp = dyn_cast<GatherOp>(op))
     return gatherOp.getEfficientLayout();
@@ -1179,7 +1180,7 @@ public:
     ModuleOp m = getOperation();
     RewritePatternSet cleanUpPatterns(context);
     ConvertLayoutOp::getCanonicalizationPatterns(cleanUpPatterns, context);
-    if (applyPatternsAndFoldGreedily(m, std::move(cleanUpPatterns)).failed()) {
+    if (applyPatternsGreedily(m, std::move(cleanUpPatterns)).failed()) {
       signalPassFailure();
     }
 
@@ -1235,7 +1236,7 @@ public:
     scf::ForOp::getCanonicalizationPatterns(cleanUpPatterns2, context);
     scf::IfOp::getCanonicalizationPatterns(cleanUpPatterns2, context);
     ConvertLayoutOp::getCanonicalizationPatterns(cleanUpPatterns2, context);
-    if (applyPatternsAndFoldGreedily(m, std::move(cleanUpPatterns2)).failed()) {
+    if (applyPatternsGreedily(m, std::move(cleanUpPatterns2)).failed()) {
       signalPassFailure();
     }
     LLVM_DEBUG({

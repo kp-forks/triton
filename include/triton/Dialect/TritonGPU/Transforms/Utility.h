@@ -205,11 +205,16 @@ enum class MMALoadType {
 };
 MMALoadType getMMALoadType(Operation *loadOp);
 
-// Returns composed LinearLayout for register to shared copy
-triton::LinearLayout getRegToSharedLayout(MLIRContext *ctx,
-                                          ArrayRef<int64_t> shape,
-                                          Attribute srcEnc, Attribute dstEnc,
-                                          int elemBitWidth);
+// Convert \param op operands and results to layout \param encoding.
+void convertOpEncoding(Attribute encoding, Operation *op);
+
+// Returns the original memory allocation for a memdesc value
+triton::gpu::LocalAllocOp findShmemAlloc(Value operand);
+
+// Returns MMAs inside a for loop that are multi-buffered for pipeline analysis
+SmallVector<Operation *>
+getMMAsWithMultiBufferredOperands(scf::ForOp forOp,
+                                  SmallVector<Operation *> &mmaOps);
 } // namespace mlir
 
 #endif // TRITON_DIALECT_TRITONGPU_TRANSFORMS_UTILITY_H_
